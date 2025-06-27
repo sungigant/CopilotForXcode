@@ -2,6 +2,8 @@ import SwiftUI
 import Combine
 import Persist
 import GitHubCopilotService
+import Client
+import Logger
 
 class CopilotMCPToolManagerObservable: ObservableObject {
     static let shared = CopilotMCPToolManagerObservable()
@@ -10,23 +12,42 @@ class CopilotMCPToolManagerObservable: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     private init() {
-        // Initial load
-        availableMCPServerTools = CopilotMCPToolManager.getAvailableMCPServerToolsCollections()
-        
-        // Setup notification to update when MCP server tools collections change
-        NotificationCenter.default
+        DistributedNotificationCenter.default()
             .publisher(for: .gitHubCopilotMCPToolsDidChange)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
-                self.refreshTools()
+                Task {
+                    await self.refreshMCPServerTools()
+                }
             }
             .store(in: &cancellables)
+
+        Task {
+            // Initial load of MCP server tools collections from ExtensionService process
+            await refreshMCPServerTools()
+        }
     }
-    
-    private func refreshTools() {
-        self.availableMCPServerTools = CopilotMCPToolManager.getAvailableMCPServerToolsCollections()
-        AppState.shared.cleanupMCPToolsStatus(availableTools: self.availableMCPServerTools)
-        AppState.shared.createMCPToolsStatus(self.availableMCPServerTools)
+
+    @MainActor
+    private func refreshMCPServerTools() async {
+        do {
+            let service = try getService()
+            let mcpTools = try await service.getAvailableMCPServerToolsCollections()
+            refreshTools(tools: mcpTools)
+        } catch {
+            Logger.client.error("Failed to fetch MCP server tools: \(error)")
+        }
+    }
+
+    private func refreshTools(tools: [MCPServerToolsCollection]?) {
+        guard let tools = tools else {
+            // nil means the tools data is ready, and skip it first.
+            return
+        }
+
+        AppState.shared.cleanupMCPToolsStatus(availableTools: tools)
+        AppState.shared.createMCPToolsStatus(tools)
+        self.availableMCPServerTools = tools
     }
 }

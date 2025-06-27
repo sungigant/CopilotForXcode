@@ -65,7 +65,7 @@ public extension AXUIElement {
     }
     
     var isXcodeWorkspaceWindow: Bool {
-        description == "Xcode.WorkspaceWindow"
+        description == "Xcode.WorkspaceWindow" || identifier == "Xcode.WorkspaceWindow"
     }
 
     var selectedTextRange: ClosedRange<Int>? {

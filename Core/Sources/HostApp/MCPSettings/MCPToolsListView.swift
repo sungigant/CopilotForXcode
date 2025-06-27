@@ -112,17 +112,8 @@ struct MCPToolsListView: View {
     }
 
     private func updateServerToggleStates() {
-        let savedToolsStatus = AppState.shared.getMCPToolsStatus()
         serverToggleStates = mcpToolManager.availableMCPServerTools.reduce(into: [:]) { result, server in
-            // Find saved status for this server
-            let savedServerStatus = savedToolsStatus?.first(where: { $0.name == server.name })
-            if let savedStatus = savedServerStatus {
-                // Check if all tools in this server are disabled
-                result[server.name] = !savedStatus.tools.allSatisfy { $0.status != .enabled }
-            } else {
-                // Preserve existing state or default to enabled
-                result[server.name] = serverToggleStates[server.name] ?? true
-            }
+            result[server.name] = !server.tools.isEmpty && !server.tools.allSatisfy{ $0._status != .enabled }
         }
     }
 

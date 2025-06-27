@@ -310,12 +310,7 @@ extension CustomJSONRPCLanguageServer {
                 block(nil)
                 return true
             case "copilot/mcpTools":
-                if let payload = GetAllToolsParams.decode(
-                    fromParams: anyNotification.params
-                ) {
-                    Logger.gitHubCopilot.info("MCPTools: \(payload)")
-                    CopilotMCPToolManager.updateMCPTools(payload.servers)
-                }
+                notificationPublisher.send(anyNotification)
                 block(nil)
                 return true
             case "conversation/preconditionsNotification", "statusNotification":

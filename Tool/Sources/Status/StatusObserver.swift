@@ -37,7 +37,7 @@ public class StatusObserver: ObservableObject {
         let statusInfo = await Status.shared.getStatus()
         
         self.authStatus = AuthStatus(
-            status: authStatus,
+            status: authStatus.status,
             username: statusInfo.userName,
             message: nil
         )

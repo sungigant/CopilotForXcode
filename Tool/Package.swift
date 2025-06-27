@@ -85,7 +85,7 @@ let package = Package(
     targets: [
         // MARK: - Helpers
 
-        .target(name: "XPCShared", dependencies: ["SuggestionBasic", "Logger", "Status", "HostAppActivator"]),
+        .target(name: "XPCShared", dependencies: ["SuggestionBasic", "Logger", "Status", "HostAppActivator", "GitHubCopilotService"]),
 
         .target(name: "Configs"),
 

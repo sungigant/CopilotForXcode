@@ -113,8 +113,8 @@ public final actor Status {
         ).isEmpty
     }
 
-    public func getAuthStatus() -> AuthStatus.Status {
-        authStatus.status
+    public func getAuthStatus() -> AuthStatus {
+        authStatus
     }
 
     public func getCLSStatus() -> CLSStatus {

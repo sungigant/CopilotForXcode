@@ -8,6 +8,7 @@ import Status
 import XPCShared
 import HostAppActivator
 import XcodeInspector
+import GitHubCopilotViewModel
 
 public class XPCService: NSObject, XPCServiceProtocol {
     // MARK: - Service
@@ -17,6 +18,19 @@ public class XPCService: NSObject, XPCServiceProtocol {
             Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "N/A",
             Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "N/A"
         )
+    }
+    
+    public func getXPCCLSVersion(withReply reply: @escaping (String?) -> Void) {
+        Task { @MainActor in
+            do {
+                let service = try GitHubCopilotViewModel.shared.getGitHubCopilotAuthService()
+                let version = try await service.version()
+                reply(version)
+            } catch {
+                Logger.service.error("Failed to get CLS version: \(error.localizedDescription)")
+                reply(nil)
+            }
+        }
     }
 
     public func getXPCServiceAccessibilityPermission(withReply reply: @escaping (ObservedAXStatus) -> Void) {
@@ -260,6 +274,58 @@ public class XPCService: NSObject, XPCServiceProtocol {
         } catch {
             Logger.service.error("Failed to encode XcodeInspector data: \(error.localizedDescription)")
             reply(nil, error)
+        }
+    }
+    
+    // MARK: - MCP Server Tools
+    public func getAvailableMCPServerToolsCollections(withReply reply: @escaping (Data?) -> Void) {
+        let availableMCPServerTools = CopilotMCPToolManager.getAvailableMCPServerToolsCollections()
+        if let availableMCPServerTools = availableMCPServerTools {
+            // Encode and send the data
+            let data = try? JSONEncoder().encode(availableMCPServerTools)
+            reply(data)
+        } else {
+            reply(nil)
+        }
+    }
+
+    public func updateMCPServerToolsStatus(tools: Data) {
+        // Decode the data
+        let decoder = JSONDecoder()
+        var collections: [UpdateMCPToolsStatusServerCollection] = []
+        do {
+            collections = try decoder.decode([UpdateMCPToolsStatusServerCollection].self, from: tools)
+            if collections.isEmpty {
+                return
+            }
+        } catch {
+            Logger.service.error("Failed to decode MCP server collections: \(error)")
+            return
+        }
+
+        Task { @MainActor in
+            await GitHubCopilotService.updateAllClsMCP(collections: collections)
+        }
+    }
+    
+    // MARK: - Auth
+    public func signOutAllGitHubCopilotService() {
+        Task { @MainActor in
+            do {
+                try await GitHubCopilotService.signOutAll()
+            } catch {
+                Logger.service.error("Failed to sign out all: \(error)")
+            }
+        }
+    }
+    
+    public func getXPCServiceAuthStatus(withReply reply: @escaping (Data?) -> Void) {
+        Task { @MainActor in
+            let service = try GitHubCopilotViewModel.shared.getGitHubCopilotAuthService()
+            _ = try await service.checkStatus()
+            let authStatus = await Status.shared.getAuthStatus()
+            let data = try? JSONEncoder().encode(authStatus)
+            reply(data)
         }
     }
 }

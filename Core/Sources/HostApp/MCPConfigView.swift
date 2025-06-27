@@ -161,11 +161,6 @@ struct MCPConfigView: View {
             UserDefaults.shared.set(jsonString, for: \.gitHubCopilotMCPConfig)
         }
 
-        NotificationCenter.default.post(
-            name: .gitHubCopilotShouldRefreshEditorInformation,
-            object: nil
-        )
-
         Task {
             let service = try getService()
             do {

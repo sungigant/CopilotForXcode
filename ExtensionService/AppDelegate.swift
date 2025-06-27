@@ -256,7 +256,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func setInitialStatusBarStatus() {
         Task {
             let authStatus = await Status.shared.getAuthStatus()
-            if authStatus == .unknown {
+            if authStatus.status == .unknown {
                 // temporarily kick off a language server instance to prime the initial auth status
                 await forceAuthStatusCheck()
             }

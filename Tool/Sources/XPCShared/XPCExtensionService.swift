@@ -1,4 +1,5 @@
 import Foundation
+import GitHubCopilotService
 import Logger
 import Status
 
@@ -45,6 +46,15 @@ public class XPCExtensionService {
             service, continuation in
             service.getXPCServiceVersion { version, build in
                 continuation.resume((version, build))
+            }
+        }
+    }
+    
+    public func getXPCCLSVersion() async throws -> String? {
+        try await withXPCServiceConnected {
+            service, continuation in
+            service.getXPCCLSVersion { version in
+                continuation.resume(version)
             }
         }
     }
@@ -341,6 +351,67 @@ extension XPCExtensionService {
                 do {
                     let inspectorData = try JSONDecoder().decode(XcodeInspectorData.self, from: data)
                     continuation.resume(inspectorData)
+                } catch {
+                    continuation.reject(error)
+                }
+            }
+        }
+    }
+
+    @XPCServiceActor
+    public func getAvailableMCPServerToolsCollections() async throws -> [MCPServerToolsCollection]? {
+        return try await withXPCServiceConnected {
+            service, continuation in
+            service.getAvailableMCPServerToolsCollections { data in
+                guard let data else {
+                    continuation.resume(nil)
+                    return
+                }
+
+                do {
+                    let tools = try JSONDecoder().decode([MCPServerToolsCollection].self, from: data)
+                    continuation.resume(tools)
+                } catch {
+                    continuation.reject(error)
+                }
+            }
+        }
+    }
+
+    @XPCServiceActor
+    public func updateMCPServerToolsStatus(_ update: [UpdateMCPToolsStatusServerCollection]) async throws {
+        return try await withXPCServiceConnected {
+            service, continuation in
+            do {
+                let data = try JSONEncoder().encode(update)
+                service.updateMCPServerToolsStatus(tools: data)
+                continuation.resume(())
+            } catch {
+                continuation.reject(error)
+            }
+        }
+    }
+    
+    @XPCServiceActor
+    public func signOutAllGitHubCopilotService() async throws {
+        return try await withXPCServiceConnected {
+            service, _ in service.signOutAllGitHubCopilotService()
+        }
+    }
+    
+    @XPCServiceActor
+    public func getXPCServiceAuthStatus() async throws -> AuthStatus? {
+        return try await withXPCServiceConnected {
+            service, continuation in
+            service.getXPCServiceAuthStatus { data in
+                guard let data else {
+                    continuation.resume(nil)
+                    return
+                }
+
+                do {
+                    let authStatus = try JSONDecoder().decode(AuthStatus.self, from: data)
+                    continuation.resume(authStatus)
                 } catch {
                     continuation.reject(error)
                 }
