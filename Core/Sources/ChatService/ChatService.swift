@@ -535,7 +535,16 @@ public final class ChatService: ChatServiceType, ObservableObject {
         if let _ = (await memory.history).first(where: { $0.id == id }),
            let lastUserRequest
         {
-            // TODO: clean up contents for resend message
+            // Clean up contents for resend message - remove assistant responses after this message
+            let history = await memory.history
+            if let messageIndex = history.firstIndex(where: { $0.id == id }) {
+                let messagesToRemove = Array(history[(messageIndex + 1)...])
+                for message in messagesToRemove {
+                    await memory.removeMessage(message.id)
+                    deleteChatMessageFromStorage(message.id)
+                }
+            }
+            
             activeRequestId = nil
             try await send(
                 id,
@@ -639,7 +648,26 @@ public final class ChatService: ChatServiceType, ObservableObject {
     }
     
     public func copyCode(_ id: String) async {
-        // TODO: pass copy code info to Copilot server
+        // Find the message with the given ID
+        if let message = (await memory.history).first(where: { $0.id == id }) {
+            // Create a copy code request - for now, we'll use default values
+            // In a real implementation, we'd need to know which code block was copied
+            let copyCodeRequest = CopyCodeRequest(
+                turnId: id,
+                codeBlockIndex: 0,
+                copyType: .toolbar,
+                copiedCharacters: message.content.count,
+                totalCharacters: message.content.count,
+                copiedText: message.content
+            )
+            
+            // Pass copy code info to Copilot server
+            do {
+                try await conversationProvider?.copyCode(copyCodeRequest, workspaceURL: getWorkspaceURL())
+            } catch {
+                print("Failed to send copy code info to Copilot server: \(error)")
+            }
+        }
     }
 
     // not used
