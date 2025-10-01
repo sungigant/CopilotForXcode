@@ -43,6 +43,7 @@ struct GlobalInstructionsView: View {
                         .foregroundColor(Color(nsColor: .placeholderTextColor))
                         .font(.body)
                         .allowsHitTesting(false)
+                        .padding(.horizontal, 6)
                 }
             }
             .padding(8)
@@ -67,8 +68,8 @@ struct GlobalInstructionsView: View {
             object: nil
         )
         Task {
-            let service = try getService()
             do {
+                let service = try getService()
                 // Notify extension service process to refresh all its CLS subprocesses to apply new configuration
                 try await service.postNotification(
                     name: Notification.Name

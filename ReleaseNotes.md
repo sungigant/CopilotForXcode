@@ -1,12 +1,20 @@
-### GitHub Copilot for Xcode 0.37.0
+### GitHub Copilot for Xcode 0.42.0
 
 **🚀 Highlights**
 
-* **Advanced** settings: Added option to configure **Custom Instructions** for GitHub Copilot during chat sessions.
-* **Advanced** settings: Added option to keep the chat window automatically attached to Xcode.
-* Added support for dragging-and-dropping files into the chat panel to provide context.
+* Support for Bring Your Own Keys (BYOK) with model providers including Azure, OpenAI, Anthropic, Gemini, Groq, and OpenRouter. See [BYOK.md](https://github.com/github/CopilotForXcode/blob/0.42.0/Docs/BYOK.md).
+* Support for custom instruction files at `.github/instructions/*.instructions.md`. See [CustomInstructions.md](https://github.com/github/CopilotForXcode/blob/0.42.0/Docs/CustomInstructions.md).
+* Support for prompt files at `.github/prompts/*.prompt.md`. See [PromptFiles.md](https://github.com/github/CopilotForXcode/blob/0.42.0/Docs/PromptFiles.md).
+* Default chat mode is now set to “Agent”.
+
+
+**💪 Improvements**
+
+* Use the current selection as chat context.
+* Add folders as chat context.
+* Shortcut to quickly fix errors in Xcode.
+* Use ↑/↓ keys to reuse previous chat context in the chat view.
 
 **🛠️ Bug Fixes**
 
-* "Add Context" menu didn’t show files in workspaces organized with Xcode’s group feature.
-* Chat didn’t respond when the workspace was in a system folder (like Desktop, Downloads, or Documents) and access permission hadn’t been granted.
+* Cannot copy url from Safari browser to chat view.

@@ -4,9 +4,10 @@ import Foundation
 
 public protocol WorkspaceFileProvider {
     func getProjects(by workspaceURL: URL) -> [URL]
-    func getFilesInActiveWorkspace(workspaceURL: URL, workspaceRootURL: URL) -> [FileReference]
+    func getFilesInActiveWorkspace(workspaceURL: URL, workspaceRootURL: URL) -> [ConversationFileReference]
     func isXCProject(_ url: URL) -> Bool
     func isXCWorkspace(_ url: URL) -> Bool
+    func fileExists(atPath: String) -> Bool
 }
 
 public class FileChangeWatcherWorkspaceFileProvider: WorkspaceFileProvider {
@@ -15,10 +16,11 @@ public class FileChangeWatcherWorkspaceFileProvider: WorkspaceFileProvider {
     public func getProjects(by workspaceURL: URL) -> [URL] {
         guard let workspaceInfo = WorkspaceFile.getWorkspaceInfo(workspaceURL: workspaceURL)
         else { return [] }
-        return WorkspaceFile.getProjects(workspace: workspaceInfo).map { URL(fileURLWithPath: $0.uri) }
+        
+        return WorkspaceFile.getProjects(workspace: workspaceInfo).compactMap { URL(string: $0.uri) }
     }
     
-    public func getFilesInActiveWorkspace(workspaceURL: URL, workspaceRootURL: URL) -> [FileReference] {
+    public func getFilesInActiveWorkspace(workspaceURL: URL, workspaceRootURL: URL) -> [ConversationFileReference] {
         return WorkspaceFile.getFilesInActiveWorkspace(workspaceURL: workspaceURL, workspaceRootURL: workspaceRootURL)
     }
     
@@ -28,5 +30,9 @@ public class FileChangeWatcherWorkspaceFileProvider: WorkspaceFileProvider {
     
     public func isXCWorkspace(_ url: URL) -> Bool {
         return WorkspaceFile.isXCWorkspace(url)
+    }
+
+    public func fileExists(atPath: String) -> Bool {
+        return FileManager.default.fileExists(atPath: atPath)
     }
 }

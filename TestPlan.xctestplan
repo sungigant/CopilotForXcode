@@ -93,10 +93,6 @@
       }
     },
     {
-      "skippedTests" : [
-        "FileChangeWatcherServiceTests\/testProjectMonitoringDetectsAddedProjects()",
-        "FileChangeWatcherServiceTests\/testProjectMonitoringDetectsRemovedProjects()"
-      ],
       "target" : {
         "containerPath" : "container:Tool",
         "identifier" : "WorkspaceTests",
